@@ -13,7 +13,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23'
+          go-version: '1.23'  # Use 1.23 as it seems to be working
 
       - name: Clone Rancher Tests Repository
         run: |
@@ -32,9 +32,15 @@ jobs:
             clusterName: "${{ secrets.CLUSTER_NAME }}"
           EOF
 
-      - name: Run Webhook Tests
+      - name: List available test files
+        run: |
+          cd tests
+          find . -name "*webhook*_test.go" -type f
+
+      - name: Run Webhook Tests with build tags
         env:
           CATTLE_TEST_CONFIG: ${{ github.workspace }}/cattle-config.yaml
         run: |
           cd tests
-          go test -v ./validation/charts -run TestWebhookTestSuite
+          # Use the build tags from the test file comment
+          go test -v -tags=validation,infra.any,cluster.any,stress ./validation/charts -run TestWebhookTestSuite
